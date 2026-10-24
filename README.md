@@ -48,7 +48,7 @@ All routes return HTTP 200 with the same shape in every mode, including `mode` (
 | `POST /api/agent` | `{ task, search? }` | `{ requests, search }` |
 | `POST /api/authorize` | `{ policy, state, request }` | `{ decision }` |
 
-To try them, import [`insomnia/kanakku-pulla.insomnia.json`](insomnia/kanakku-pulla.insomnia.json) into Insomnia (20 requests with documented expected results).
+To try them, import [`insomnia/kanakku-pulla.insomnia.json`](insomnia/kanakku-pulla.insomnia.json) into Insomnia (21 requests with documented expected results).
 
 ## Configuration
 
