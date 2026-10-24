@@ -8,6 +8,10 @@
 
 Tell the wallet your rules in everyday language ("Never pay more than ₹5,000 in a single payment. Block gambling and crypto. Ask me before paying new merchants."). An AI agent then tries to make payments, and every payment is checked against your rules before any money moves. Built for a hackathon live demo.
 
+<p align="center">
+  <img src="docs/dashboard.png" alt="Kanakku Pulla dashboard: plain-English rules compiled to chips, the agent&#39;s live web search suggestions, and the live feed with approved, blocked and needs-you payments" width="900">
+</p>
+
 ## How it works
 
 1. **Write rules** in plain English and click *Compile*. They become structured rules, and each rule keeps the sentence it came from.
@@ -64,6 +68,7 @@ lib/ai.ts       Gemini (REST) then Claude (SDK), with timeouts and validation
 lib/fallback.ts regex rule parser and scripted agent payments
 insomnia/       API test collection
 public/brand/   logo (png, mp4, and the animated gif used above)
+docs/           dashboard screenshot used in this README
 ```
 
 ## Stack
