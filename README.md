@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <video src="public/brand/logo.mp4" poster="public/brand/logo.png" width="360" controls muted playsinline>
+    <img src="public/brand/logo.png" alt="Kanakku Pulla logo" width="360">
+  </video>
+  <br>
+  <sub><a href="public/brand/logo.mp4">Watch the 6-second logo intro (mp4)</a></sub>
+</p>
 
-## Getting Started
+# Kanakku Pulla (கணக்குப் புள்ள)
 
-First, run the development server:
+**An AI agent wallet with plain-English spending guardrails.**
+
+Tell the wallet your rules in everyday language ("Never pay more than ₹5,000 in a single payment. Block gambling and crypto. Ask me before paying new merchants."). An AI agent then tries to make payments, and every payment is checked against your rules before any money moves. Built for a hackathon live demo.
+
+## How it works
+
+1. **Write rules** in plain English and click *Compile*. They become structured rules, and each rule keeps the sentence it came from.
+2. **Give the agent a task.** It proposes 3–6 realistic Indian UPI payments (Swiggy, IRCTC, Amazon, and so on).
+3. **Every payment gets a verdict** in the live feed: **Approved**, **Blocked**, or **Needs you** (with Approve and Deny buttons). Each reason quotes the sentence you wrote.
+
+**The LLM never decides money.** Verdicts come from a small deterministic rules engine ([`lib/engine.ts`](lib/engine.ts)) shared by the server and the browser. Precedence is BLOCK > ASK > APPROVE.
+
+**It never fails.** Compile and agent calls try Gemini, then Claude, then a rule-based fallback on the server, then an in-browser fallback if the API is unreachable. The UI shows which one answered (Gemini, Claude, Fallback, or Offline). Provider errors, timeouts and bad JSON all just move to the next step.
+
+## Rule types
+
+`max_per_txn` · `daily_total_cap` · `category_daily_cap` · `ask_above` · `new_merchant` · `blocked_category` · `blocked_merchant` · `time_window` (IST). Each rule either **blocks** or **asks** you.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env     # add GEMINI_API_KEY and/or ANTHROPIC_API_KEY (both optional)
+npm run dev              # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Click **Run full demo** to see 8 scripted payments hit the sample rules, one per second. With no API keys at all, everything still works in fallback mode.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | What it does |
+|---|---|
+| `npm run build` | Production build |
+| `npm run check:fallback` | Proves compile, agent and authorize work with empty keys, fake keys and failing providers |
+| `npm run lint` | ESLint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API
 
-## Learn More
+All routes return HTTP 200 with the same shape in every mode, including `mode` (`gemini` / `claude` / `fallback`) and `store`.
 
-To learn more about Next.js, take a look at the following resources:
+| Route | Body | Returns |
+|---|---|---|
+| `POST /api/compile` | `{ text }` | `{ policy, warnings }` |
+| `POST /api/agent` | `{ task }` | `{ requests }` |
+| `POST /api/authorize` | `{ policy, state, request }` | `{ decision }` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To try them, import [`insomnia/kanakku-pulla.insomnia.json`](insomnia/kanakku-pulla.insomnia.json) into Insomnia (20 requests with documented expected results).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Configuration
 
-## Deploy on Vercel
+Config is read **only** from the `.env` file in the project root, through [`lib/config.ts`](lib/config.ts). Shell environment variables are ignored. See [`.env.example`](.env.example) for every key (`AI_PROVIDER_ORDER`, `AI_TIMEOUT_MS`, `GEMINI_*`, `ANTHROPIC_*`, `GCP_PROJECT_ID`, `FIRESTORE_ENABLED`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/            dashboard (page.tsx) and the three API routes
+components/     header, rules panel, agent panel, live feed, intro splash
+lib/engine.ts   the rules engine: the only place money decisions are made
+lib/ai.ts       Gemini (REST) then Claude (SDK), with timeouts and validation
+lib/fallback.ts regex rule parser and scripted agent payments
+insomnia/       API test collection
+public/brand/   logo (png and mp4)
+```
+
+## Stack
+
+Next.js 16 (App Router), React 19, Tailwind CSS v4, TypeScript, zod, `@anthropic-ai/sdk`, and the Gemini REST API.
+
+## Status
+
+Wallet state is kept in the browser (`localStorage`). Firestore persistence (`firebase-admin`) and the Cloud Run deployment are planned but not wired up yet, so the `store` pill always reads *Local* for now.
