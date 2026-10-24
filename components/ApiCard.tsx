@@ -16,7 +16,7 @@ const BODY = JSON.stringify({
   },
   state: {},
   request: {
-    id: "req_demo1",
+    id: "req_1",
     merchant: "Swiggy",
     vpa: "swiggy@icici",
     amount: 6200,

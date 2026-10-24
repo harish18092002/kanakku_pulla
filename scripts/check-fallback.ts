@@ -16,6 +16,7 @@ type Reply = {
   warnings?: string[];
   requests?: PaymentRequest[];
   decision?: Decision;
+  search?: { queries: string[]; sources: { title: string; url: string }[] } | null;
 };
 type Handler = (req: Request) => Promise<Response>;
 
@@ -214,11 +215,15 @@ const realFetch = globalThis.fetch;
 const urlOf = (input: Parameters<typeof fetch>[0]) =>
   typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 
+const bodies: string[] = []; // request bodies seen by the stubbed fetch, in order
+
 function stubFetch(handler: (url: string, init?: RequestInit) => Promise<Response> | Response) {
   const calls: string[] = [];
+  bodies.length = 0;
   globalThis.fetch = ((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const url = urlOf(input);
     calls.push(new URL(url).host);
+    bodies.push(String(init?.body ?? ""));
     return Promise.resolve(handler(url, init));
   }) as typeof fetch;
   return calls;
@@ -314,6 +319,43 @@ async function providerChain() {
     calls = stubFetch(() => geminiOk(AI_RULES));
     assert.equal((await compileSigs("Block gambling")).res.json.mode, "fallback");
     assert.equal(calls.length, 0);
+  });
+
+  await step("live search: grounded reply -> search info surfaced, unsafe links dropped, search tool requested", async () => {
+    setConfigOverride(gemini);
+    const grounded = {
+      candidates: [{
+        content: { parts: [{ text: ["```json", JSON.stringify(AI_REQUESTS), "```"].join("\n") }] },
+        groundingMetadata: {
+          webSearchQueries: ["goa hotels weekend price"],
+          groundingChunks: [
+            { web: { uri: "https://example.com/goa", title: "Goa guide" } },
+            { web: { uri: "javascript:alert(1)", title: "bad" } },
+            { web: { uri: "https://example.com/goa", title: "dupe" } },
+          ],
+        },
+      }],
+    };
+    stubFetch(() => Response.json(grounded));
+    const res = await post(agent, { task: "weekend in Goa", search: true });
+    assertShape(res);
+    assert.equal(res.json.mode, "gemini");
+    assert.deepEqual(res.json.search, { queries: ["goa hotels weekend price"], sources: [{ title: "Goa guide", url: "https://example.com/goa" }] });
+    assert.ok(bodies[0].includes("google_search") && !bodies[0].includes("responseMimeType"), "search call must use the search tool, not JSON mode");
+    stubFetch(() => geminiOk(AI_REQUESTS));
+    const plain = await post(agent, { task: "weekend in Goa" });
+    assert.equal(plain.json.search, null);
+    assert.ok(!bodies[0].includes("google_search"), "search must be opt-in");
+  });
+
+  await step("live search: failed search attempt -> same provider answers without search", async () => {
+    setConfigOverride(gemini);
+    const calls = stubFetch((_url, init) => (String(init?.body).includes("google_search") ? new Response("quota", { status: 429 }) : geminiOk(AI_REQUESTS)));
+    const res = await post(agent, { task: "weekend in Goa", search: true });
+    assertShape(res);
+    assert.deepEqual([res.json.mode, res.json.search, calls.length], ["gemini", null, 2]);
+    stubFetch(() => geminiOk(AI_REQUESTS)); // model answered without actually searching -> not reported as live
+    assert.equal((await post(agent, { task: "x", search: true })).json.search, null);
   });
 
   globalThis.fetch = realFetch;

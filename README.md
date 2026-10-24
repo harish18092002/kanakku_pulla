@@ -1,9 +1,5 @@
 <p align="center">
-  <video src="public/brand/logo.mp4" poster="public/brand/logo.png" width="360" controls muted playsinline>
-    <img src="public/brand/logo.png" alt="Kanakku Pulla logo" width="360">
-  </video>
-  <br>
-  <sub><a href="public/brand/logo.mp4">Watch the 6-second logo intro (mp4)</a></sub>
+  <img src="public/brand/logo.gif" alt="Kanakku Pulla logo animation" width="360">
 </p>
 
 # Kanakku Pulla (கணக்குப் புள்ள)
@@ -15,7 +11,7 @@ Tell the wallet your rules in everyday language ("Never pay more than ₹5,000 i
 ## How it works
 
 1. **Write rules** in plain English and click *Compile*. They become structured rules, and each rule keeps the sentence it came from.
-2. **Give the agent a task.** It proposes 3–6 realistic Indian UPI payments (Swiggy, IRCTC, Amazon, and so on).
+2. **Give the agent a task.** It proposes 3–6 realistic Indian UPI payments. With **Search the web live** on, Gemini uses Google Search to find real merchants and prices, and the *Agent suggestions* box shows what it searched for.
 3. **Every payment gets a verdict** in the live feed: **Approved**, **Blocked**, or **Needs you** (with Approve and Deny buttons). Each reason quotes the sentence you wrote.
 
 **The LLM never decides money.** Verdicts come from a small deterministic rules engine ([`lib/engine.ts`](lib/engine.ts)) shared by the server and the browser. Precedence is BLOCK > ASK > APPROVE.
@@ -34,7 +30,7 @@ cp .env.example .env     # add GEMINI_API_KEY and/or ANTHROPIC_API_KEY (both opt
 npm run dev              # http://localhost:3000
 ```
 
-Click **Run full demo** to see 8 scripted payments hit the sample rules, one per second. With no API keys at all, everything still works in fallback mode.
+Click **Run sample scenario** to see 8 fixed payments hit the sample rules, one per second. With no API keys at all, everything still works in fallback mode.
 
 | Script | What it does |
 |---|---|
@@ -49,14 +45,14 @@ All routes return HTTP 200 with the same shape in every mode, including `mode` (
 | Route | Body | Returns |
 |---|---|---|
 | `POST /api/compile` | `{ text }` | `{ policy, warnings }` |
-| `POST /api/agent` | `{ task }` | `{ requests }` |
+| `POST /api/agent` | `{ task, search? }` | `{ requests, search }` |
 | `POST /api/authorize` | `{ policy, state, request }` | `{ decision }` |
 
 To try them, import [`insomnia/kanakku-pulla.insomnia.json`](insomnia/kanakku-pulla.insomnia.json) into Insomnia (20 requests with documented expected results).
 
 ## Configuration
 
-Config is read **only** from the `.env` file in the project root, through [`lib/config.ts`](lib/config.ts). Shell environment variables are ignored. See [`.env.example`](.env.example) for every key (`AI_PROVIDER_ORDER`, `AI_TIMEOUT_MS`, `GEMINI_*`, `ANTHROPIC_*`, `GCP_PROJECT_ID`, `FIRESTORE_ENABLED`).
+Config is read **only** from the `.env` file in the project root, through [`lib/config.ts`](lib/config.ts). Shell environment variables are ignored. See [`.env.example`](.env.example) for every key (`AI_PROVIDER_ORDER`, `AI_TIMEOUT_MS`, `AI_SEARCH_TIMEOUT_MS`, `GEMINI_*`, `ANTHROPIC_*`, `GCP_PROJECT_ID`, `FIRESTORE_ENABLED`).
 
 ## Project layout
 
@@ -67,7 +63,7 @@ lib/engine.ts   the rules engine: the only place money decisions are made
 lib/ai.ts       Gemini (REST) then Claude (SDK), with timeouts and validation
 lib/fallback.ts regex rule parser and scripted agent payments
 insomnia/       API test collection
-public/brand/   logo (png and mp4)
+public/brand/   logo (png, mp4, and the animated gif used above)
 ```
 
 ## Stack

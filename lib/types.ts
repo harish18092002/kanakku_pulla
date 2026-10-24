@@ -105,3 +105,10 @@ export const WalletStateSchema = z.object({
   knownMerchants: z.array(z.string()).default([]), // lowercase VPAs paid before
 });
 export type WalletState = z.infer<typeof WalletStateSchema>;
+
+// Evidence that an AI answer came from a live web search (Gemini + Google Search grounding).
+export const SearchInfoSchema = z.object({
+  queries: z.array(z.string()),
+  sources: z.array(z.object({ title: z.string(), url: z.string().regex(/^https:\/\//) })),
+});
+export type SearchInfo = z.infer<typeof SearchInfoSchema>;

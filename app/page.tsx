@@ -7,12 +7,22 @@ import { ApiCard } from "@/components/ApiCard";
 import { Feed } from "@/components/Feed";
 import { Header } from "@/components/Header";
 import { RulesPanel } from "@/components/RulesPanel";
+import { Suggestions, type SuggestionData } from "@/components/Suggestions";
 import { Splash } from "@/components/Splash";
 import { initialState, loadSaved, reducer, save, type UiMode } from "@/lib/dashboard";
 import { DEMO_POLICY_TEXT, DEMO_REQUESTS, DEMO_TASK } from "@/lib/demo";
 import { parseRules, scriptedRequests } from "@/lib/fallback";
 import { toPolicy, toRequests } from "@/lib/finish";
-import { PaymentRequestSchema, PolicySchema, type Mode, type PaymentRequest, type Policy, type Store } from "@/lib/types";
+import {
+  PaymentRequestSchema,
+  PolicySchema,
+  SearchInfoSchema,
+  type Mode,
+  type PaymentRequest,
+  type Policy,
+  type SearchInfo,
+  type Store,
+} from "@/lib/types";
 
 const MAX_TEXT = 2000;
 const RequestsSchema = z.array(PaymentRequestSchema).min(1).max(12);
@@ -22,13 +32,13 @@ const asMode = (v: unknown): Mode => (v === "gemini" || v === "claude" ? v : "fa
 const asStore = (v: unknown): Store => (v === "firestore" ? "firestore" : "local");
 
 // Any failure (network, non-200, bad JSON) returns null and the page switches to its in-browser fallback.
-async function callApi(path: string, body: object): Promise<Record<string, unknown> | null> {
+async function callApi(path: string, body: object, timeoutMs = 20_000): Promise<Record<string, unknown> | null> {
   try {
     const res = await fetch(path, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) return null;
     const json: unknown = await res.json();
@@ -47,6 +57,8 @@ export default function Page() {
   const [compiling, setCompiling] = useState(false);
   const [busy, setBusy] = useState<"agent" | "demo" | null>(null);
   const [note, setNote] = useState("");
+  const [live, setLive] = useState(true); // ask the agent to search the web
+  const [suggestions, setSuggestions] = useState<SuggestionData | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const stateRef = useRef(state);
   const runId = useRef(0); // bumping this cancels any in-flight agent/demo loop
@@ -112,20 +124,26 @@ export default function Page() {
     setNote("Checking your rules…");
     await ensurePolicy();
     if (runId.current !== id) return;
-    setNote("Agent is planning payments…");
-    const res = await callApi("/api/agent", { task });
+    setNote(live ? "Searching the web for real options… this can take 10–20 seconds" : "Agent is planning payments…");
+    const res = await callApi("/api/agent", { task, search: live }, live ? 50_000 : 20_000);
     const parsed = res ? RequestsSchema.safeParse(res.requests) : null;
+    const searched = res ? SearchInfoSchema.nullable().safeParse(res.search ?? null) : null;
     let requests: PaymentRequest[];
+    let used: UiMode;
+    let search: SearchInfo | null = null;
     if (res && parsed?.success) {
       requests = parsed.data;
-      setMode(asMode(res.mode));
+      used = asMode(res.mode);
+      search = searched?.success ? searched.data : null;
       setStore(asStore(res.store));
     } else {
-      requests = toRequests(scriptedRequests(task));
-      setMode("offline");
+      requests = toRequests(scriptedRequests(task)); // server unreachable: built-in samples
+      used = "offline";
       setStore("local");
     }
+    setMode(used);
     if (runId.current !== id) return;
+    setSuggestions({ requests, search, mode: used, asked: live });
     await feedRequests(requests, 700, id, (i) => setNote(`Agent payment ${i + 1} of ${requests.length}`));
     if (runId.current === id) {
       setBusy(null);
@@ -137,14 +155,15 @@ export default function Page() {
     const id = ++runId.current;
     setBusy("demo");
     dispatch({ type: "reset" });
-    setNote("Demo: loading the sample rules…");
+    setSuggestions(null);
+    setNote("Sample scenario: loading the sample rules…");
     await compile(DEMO_POLICY_TEXT);
     if (runId.current !== id) return;
     const requests = DEMO_REQUESTS.map((draft) => toRequests([draft])[0]);
-    await feedRequests(requests, 1000, id, (i) => setNote(`Demo: payment ${i + 1} of ${requests.length}`));
+    await feedRequests(requests, 1000, id, (i) => setNote(`Sample scenario: payment ${i + 1} of ${requests.length}`));
     if (runId.current === id) {
       setBusy(null);
-      setNote("Demo finished. Approve or deny the amber cards.");
+      setNote("Sample scenario finished. Approve or deny the amber cards.");
     }
   }
 
@@ -157,6 +176,7 @@ export default function Page() {
     setCompiling(false);
     setBusy(null);
     setNote("");
+    setSuggestions(null);
     setTask(DEMO_TASK);
   }
 
@@ -176,12 +196,16 @@ export default function Page() {
         <AgentPanel
           task={task}
           onTask={setTask}
+          live={live}
+          onLive={setLive}
           busy={busy}
           note={note}
           onRun={() => void runAgent()}
           onDemo={() => void runDemo()}
           onReset={reset}
-        />
+        >
+          <Suggestions data={suggestions} />
+        </AgentPanel>
         <Feed items={state.feed} onResolve={(id, approve) => dispatch({ type: "resolve", id, approve })} />
         <div className="lg:col-span-3">
           <ApiCard />

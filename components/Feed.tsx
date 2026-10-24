@@ -16,7 +16,7 @@ export function Feed({ items, onResolve }: Props) {
       <h2 className="text-sm font-semibold uppercase tracking-wide text-brand">3 · Live feed</h2>
       {items.length === 0 ? (
         <p className="mt-6 pb-6 text-center text-sm text-black/45">
-          No payments yet. Run the agent or the full demo.
+          No payments yet. Run the agent or the sample scenario.
         </p>
       ) : (
         <ul className="mt-3 space-y-3 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto lg:pr-1">

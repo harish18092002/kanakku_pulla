@@ -7,6 +7,7 @@ import path from "node:path";
 export type Config = {
   aiProviderOrder: string[];
   aiTimeoutMs: number;
+  aiSearchTimeoutMs: number;
   geminiApiKey: string;
   geminiModel: string;
   anthropicApiKey: string;
@@ -56,12 +57,14 @@ export function getConfig(): Config {
   const env = readEnvFile();
   const get = (key: string, fallback = "") => (env[key] ?? "").trim() || fallback;
   const timeout = Number(get("AI_TIMEOUT_MS"));
+  const searchTimeout = Number(get("AI_SEARCH_TIMEOUT_MS"));
   return {
     aiProviderOrder: get("AI_PROVIDER_ORDER", "gemini,claude")
       .split(",")
       .map((p) => p.trim().toLowerCase())
       .filter(Boolean),
     aiTimeoutMs: Number.isFinite(timeout) && timeout >= 500 ? Math.min(timeout, 30_000) : 8000,
+    aiSearchTimeoutMs: Number.isFinite(searchTimeout) && searchTimeout >= 2000 ? Math.min(searchTimeout, 60_000) : 20_000,
     geminiApiKey: get("GEMINI_API_KEY"),
     geminiModel: get("GEMINI_MODEL", "gemini-2.5-flash"),
     anthropicApiKey: get("ANTHROPIC_API_KEY"),
