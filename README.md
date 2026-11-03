@@ -58,6 +58,19 @@ To try them, import [`insomnia/kanakku-pulla.insomnia.json`](insomnia/kanakku-pu
 
 Config is read **only** from the `.env` file in the project root, through [`lib/config.ts`](lib/config.ts). Shell environment variables are ignored. See [`.env.example`](.env.example) for every key (`AI_PROVIDER_ORDER`, `AI_TIMEOUT_MS`, `AI_SEARCH_TIMEOUT_MS`, `GEMINI_*`, `ANTHROPIC_*`, `GCP_PROJECT_ID`, `FIRESTORE_ENABLED`).
 
+## Deploy
+
+Runs on Cloud Run (`asia-south1`) behind Firebase Hosting. Cloud Run scales to zero, so an idle app costs nothing to run.
+
+```bash
+gcloud auth login        # once
+firebase login           # once
+npm run deploy:dry       # optional: print every command without changing anything
+npm run deploy           # safe to re-run
+```
+
+The project needs billing enabled (Blaze plan). The project id comes from `GCP_PROJECT_ID` in `.env`. The whole `.env` is stored in Secret Manager and mounted at `/secrets/.env`, so `lib/config.ts` reads it the same way in the cloud. It is never uploaded with the source or built into the image. To change a key, edit `.env` and deploy again.
+
 ## Project layout
 
 ```
@@ -77,4 +90,4 @@ Next.js 16 (App Router), React 19, Tailwind CSS v4, TypeScript, zod, `@anthropic
 
 ## Status
 
-Wallet state is kept in the browser (`localStorage`). Firestore persistence (`firebase-admin`) and the Cloud Run deployment are planned but not wired up yet, so the `store` pill always reads *Local* for now.
+Wallet state is kept in the browser (`localStorage`). Firestore persistence (`firebase-admin`) is planned but not wired up yet, so the `store` pill always reads *Local* for now, including when deployed.

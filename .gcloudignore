@@ -1,0 +1,18 @@
+# What `gcloud run deploy --source .` leaves out of the upload. Keep Dockerfile and .dockerignore uploaded.
+# Secrets must never be uploaded: they go to Secret Manager instead.
+.env*
+
+.git/
+.next/
+node_modules/
+.firebase/
+*.log
+*.tsbuildinfo
+*.md
+docs/
+insomnia/
+scripts/
+image.png
+logo.mp4
+logo_img.PNG
+firebase.json

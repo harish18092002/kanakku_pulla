@@ -1,0 +1,724 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-24T10:56:50.658Z",
+  "__export_source": "insomnia.desktop.app:v10.0.0",
+  "resources": [
+    {
+      "_id": "wrk_kanakku_pulla",
+      "_type": "workspace",
+      "parentId": null,
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "name": "Kanakku Pulla",
+      "description": "Local API tests for the Kanakku Pulla AI-agent wallet. Change base_url in the environment if your dev server is not on port 3000.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_kanakku_base",
+      "_type": "environment",
+      "parentId": "wrk_kanakku_pulla",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url"
+        ]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": -999900
+    },
+    {
+      "_id": "fld_kp_compile",
+      "_type": "request_group",
+      "parentId": "wrk_kanakku_pulla",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "name": "1 · Compile rules",
+      "description": "POST /api/compile {text} -> {policy, warnings, mode, store}",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -999800
+    },
+    {
+      "_id": "req_kp_compile_demo",
+      "_type": "request",
+      "parentId": "fld_kp_compile",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/compile",
+      "name": "Compile: demo policy (6 sentences)",
+      "description": "The sample rules from the dashboard. Expect 7 rules (the gambling/crypto sentence becomes 2), each keeping its source sentence.\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999700,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_compile_caps",
+      "_type": "request",
+      "parentId": "fld_kp_compile",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/compile",
+      "name": "Compile: per-payment and daily cap",
+      "description": "Expect max_per_txn 2000 and daily_total_cap 10000, both 'block'.\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"text\": \"Max ₹2000 per payment and ₹10,000 per day\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999600,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_compile_window",
+      "_type": "request",
+      "parentId": "fld_kp_compile",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/compile",
+      "name": "Compile: time window",
+      "description": "Expect time_window startHour 23, endHour 6 (restricted hours, IST).\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"text\": \"No payments between 11pm and 6am.\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999500,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_compile_empty",
+      "_type": "request",
+      "parentId": "fld_kp_compile",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/compile",
+      "name": "Compile: empty text",
+      "description": "Never an error: returns an empty policy with a warning, HTTP 200.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"text\": \"   \"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999400,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_compile_bad",
+      "_type": "request",
+      "parentId": "fld_kp_compile",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/compile",
+      "name": "Compile: malformed JSON body",
+      "description": "Routes never return 500. A body that is not JSON is treated as empty.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{not json"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999300,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_kp_agent",
+      "_type": "request_group",
+      "parentId": "wrk_kanakku_pulla",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "name": "2 · Run agent",
+      "description": "POST /api/agent {task} -> {requests, mode, store}",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -999200
+    },
+    {
+      "_id": "req_kp_agent_dinner",
+      "_type": "request",
+      "parentId": "fld_kp_agent",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/agent",
+      "name": "Agent: order dinner",
+      "description": "Returns 3-6 PaymentRequests (Indian merchants, UPI ids, INR integers).\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"task\": \"Order dinner for the team\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999100,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_agent_trip",
+      "_type": "request",
+      "parentId": "fld_kp_agent",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/agent",
+      "name": "Agent: plan a trip",
+      "description": "Travel-flavoured requests: trains, flights, hotels, cabs.\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"task\": \"Plan a weekend trip to Goa\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -999000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_agent_dashboard",
+      "_type": "request",
+      "parentId": "fld_kp_agent",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/agent",
+      "name": "Agent: dashboard task",
+      "description": "The default task from the dashboard. A mix that usually includes risky payments.\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"task\": \"Run my weekend errands: dinner, a cab, shopping and subscriptions\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998900,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_agent_live",
+      "_type": "request",
+      "parentId": "fld_kp_agent",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/agent",
+      "name": "Agent: live web search (slower)",
+      "description": "search: true makes Gemini use Google Search (about 6-15s). Expect 3-6 requests and a non-null 'search' object with the queries it ran. If the live search is unavailable (rate limit, timeout), search is null and the AI or the built-in samples answer instead.\n\nmode is 'gemini' or 'claude' when a key in .env works, otherwise 'fallback'. Every mode returns the same shape.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"task\": \"Plan a weekend trip to Goa from Bengaluru\",\n  \"search\": true\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998800,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_agent_bad",
+      "_type": "request",
+      "parentId": "fld_kp_agent",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/agent",
+      "name": "Agent: malformed JSON body",
+      "description": "Falls back to a default task instead of failing.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{not json"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998700,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_kp_authorize",
+      "_type": "request_group",
+      "parentId": "wrk_kanakku_pulla",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "name": "3 · Authorize payment",
+      "description": "POST /api/authorize {policy, state, request} -> {decision, mode, store}",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -998600
+    },
+    {
+      "_id": "req_kp_authorize_approve",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Approve: small payment, known merchant",
+      "description": "Expect status 'approve'. No AI is involved: the decision comes only from the rules engine.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\",\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"max_per_txn\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Never pay more than ₹5,000 in a single payment.\"\n      },\n      {\n        \"id\": \"r2\",\n        \"type\": \"ask_above\",\n        \"params\": {\n          \"amount\": 1000\n        },\n        \"action\": \"ask\",\n        \"source\": \"Ask me before anything above ₹1,000.\"\n      },\n      {\n        \"id\": \"r3\",\n        \"type\": \"category_daily_cap\",\n        \"params\": {\n          \"category\": \"food\",\n          \"amount\": 1500\n        },\n        \"action\": \"block\",\n        \"source\": \"Keep food under ₹1,500 a day.\"\n      },\n      {\n        \"id\": \"r4\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"gambling\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r5\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"crypto\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r6\",\n        \"type\": \"new_merchant\",\n        \"params\": {},\n        \"action\": \"ask\",\n        \"source\": \"Ask me before paying new merchants.\"\n      },\n      {\n        \"id\": \"r7\",\n        \"type\": \"blocked_merchant\",\n        \"params\": {\n          \"merchant\": \"Zomato\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block anything on Zomato.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo1\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": 349,\n    \"category\": \"food\",\n    \"purpose\": \"Dinner: butter chicken and naan\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998500,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_ask",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Ask: above ₹1,000 and a new merchant",
+      "description": "Expect 'ask' with ruleIds [r2, r6]: needs the human's approval.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\",\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"max_per_txn\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Never pay more than ₹5,000 in a single payment.\"\n      },\n      {\n        \"id\": \"r2\",\n        \"type\": \"ask_above\",\n        \"params\": {\n          \"amount\": 1000\n        },\n        \"action\": \"ask\",\n        \"source\": \"Ask me before anything above ₹1,000.\"\n      },\n      {\n        \"id\": \"r3\",\n        \"type\": \"category_daily_cap\",\n        \"params\": {\n          \"category\": \"food\",\n          \"amount\": 1500\n        },\n        \"action\": \"block\",\n        \"source\": \"Keep food under ₹1,500 a day.\"\n      },\n      {\n        \"id\": \"r4\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"gambling\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r5\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"crypto\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r6\",\n        \"type\": \"new_merchant\",\n        \"params\": {},\n        \"action\": \"ask\",\n        \"source\": \"Ask me before paying new merchants.\"\n      },\n      {\n        \"id\": \"r7\",\n        \"type\": \"blocked_merchant\",\n        \"params\": {\n          \"merchant\": \"Zomato\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block anything on Zomato.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo2\",\n    \"merchant\": \"Amazon\",\n    \"vpa\": \"amazon@apl\",\n    \"amount\": 2499,\n    \"category\": \"shopping\",\n    \"purpose\": \"Wireless earbuds\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998400,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_gambling",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Block: gambling category",
+      "description": "Expect 'block' with ruleIds [r4]. BLOCK beats ASK: the new-merchant rule also triggers but is not listed.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\",\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"max_per_txn\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Never pay more than ₹5,000 in a single payment.\"\n      },\n      {\n        \"id\": \"r2\",\n        \"type\": \"ask_above\",\n        \"params\": {\n          \"amount\": 1000\n        },\n        \"action\": \"ask\",\n        \"source\": \"Ask me before anything above ₹1,000.\"\n      },\n      {\n        \"id\": \"r3\",\n        \"type\": \"category_daily_cap\",\n        \"params\": {\n          \"category\": \"food\",\n          \"amount\": 1500\n        },\n        \"action\": \"block\",\n        \"source\": \"Keep food under ₹1,500 a day.\"\n      },\n      {\n        \"id\": \"r4\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"gambling\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r5\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"crypto\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r6\",\n        \"type\": \"new_merchant\",\n        \"params\": {},\n        \"action\": \"ask\",\n        \"source\": \"Ask me before paying new merchants.\"\n      },\n      {\n        \"id\": \"r7\",\n        \"type\": \"blocked_merchant\",\n        \"params\": {\n          \"merchant\": \"Zomato\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block anything on Zomato.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo3\",\n    \"merchant\": \"Dream11\",\n    \"vpa\": \"dream11@yesbank\",\n    \"amount\": 2000,\n    \"category\": \"gambling\",\n    \"purpose\": \"Add cash to fantasy wallet\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998300,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_toobig",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Block: over the per-payment limit",
+      "description": "Expect 'block' with ruleIds [r1, r3]: over the ₹5,000 limit and over the ₹1,500 food cap.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\",\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"max_per_txn\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Never pay more than ₹5,000 in a single payment.\"\n      },\n      {\n        \"id\": \"r2\",\n        \"type\": \"ask_above\",\n        \"params\": {\n          \"amount\": 1000\n        },\n        \"action\": \"ask\",\n        \"source\": \"Ask me before anything above ₹1,000.\"\n      },\n      {\n        \"id\": \"r3\",\n        \"type\": \"category_daily_cap\",\n        \"params\": {\n          \"category\": \"food\",\n          \"amount\": 1500\n        },\n        \"action\": \"block\",\n        \"source\": \"Keep food under ₹1,500 a day.\"\n      },\n      {\n        \"id\": \"r4\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"gambling\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r5\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"crypto\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r6\",\n        \"type\": \"new_merchant\",\n        \"params\": {},\n        \"action\": \"ask\",\n        \"source\": \"Ask me before paying new merchants.\"\n      },\n      {\n        \"id\": \"r7\",\n        \"type\": \"blocked_merchant\",\n        \"params\": {\n          \"merchant\": \"Zomato\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block anything on Zomato.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo4\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": 6200,\n    \"category\": \"food\",\n    \"purpose\": \"Party order\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998200,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_merchant",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Block: blocked merchant",
+      "description": "Expect 'block' with ruleIds [r7].",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\",\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"max_per_txn\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Never pay more than ₹5,000 in a single payment.\"\n      },\n      {\n        \"id\": \"r2\",\n        \"type\": \"ask_above\",\n        \"params\": {\n          \"amount\": 1000\n        },\n        \"action\": \"ask\",\n        \"source\": \"Ask me before anything above ₹1,000.\"\n      },\n      {\n        \"id\": \"r3\",\n        \"type\": \"category_daily_cap\",\n        \"params\": {\n          \"category\": \"food\",\n          \"amount\": 1500\n        },\n        \"action\": \"block\",\n        \"source\": \"Keep food under ₹1,500 a day.\"\n      },\n      {\n        \"id\": \"r4\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"gambling\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r5\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"crypto\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r6\",\n        \"type\": \"new_merchant\",\n        \"params\": {},\n        \"action\": \"ask\",\n        \"source\": \"Ask me before paying new merchants.\"\n      },\n      {\n        \"id\": \"r7\",\n        \"type\": \"blocked_merchant\",\n        \"params\": {\n          \"merchant\": \"Zomato\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block anything on Zomato.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo5\",\n    \"merchant\": \"Zomato\",\n    \"vpa\": \"zomato@hdfcbank\",\n    \"amount\": 620,\n    \"category\": \"food\",\n    \"purpose\": \"Lunch for the team\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998100,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_daily",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Block: daily cap reached",
+      "description": "₹4,800 already spent on 2026-10-24 (IST) plus ₹600 goes over the ₹5,000 cap. Expect 'block'.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"daily_total_cap\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Don't spend more than ₹5,000 a day.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"2026-10-24\",\n    \"spentToday\": 4800,\n    \"spentByCategory\": {\n      \"food\": 4800\n    },\n    \"knownMerchants\": [\n      \"swiggy@icici\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo6\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": 600,\n    \"category\": \"food\",\n    \"purpose\": \"Dinner: butter chicken and naan\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -998000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_newday",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Approve: next day resets the daily cap",
+      "description": "Same wallet state, but the payment is on the next IST day, so the totals no longer count. Expect 'approve'.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"daily_total_cap\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Don't spend more than ₹5,000 a day.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"2026-10-24\",\n    \"spentToday\": 4800,\n    \"spentByCategory\": {\n      \"food\": 4800\n    },\n    \"knownMerchants\": [\n      \"swiggy@icici\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo7\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": 600,\n    \"category\": \"food\",\n    \"purpose\": \"Dinner: butter chicken and naan\",\n    \"timestamp\": \"2026-10-25T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -997900,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_night",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Block: night-time window (1:30am IST)",
+      "description": "2026-10-24T20:00Z is 01:30 IST on the 25th, inside the restricted 11pm-6am window. Expect 'block'.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"time_window\",\n        \"params\": {\n          \"startHour\": 23,\n          \"endHour\": 6\n        },\n        \"action\": \"block\",\n        \"source\": \"No payments after 11pm.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo8\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": 349,\n    \"category\": \"food\",\n    \"purpose\": \"Dinner: butter chicken and naan\",\n    \"timestamp\": \"2026-10-24T20:00:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -997800,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_invalid",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Fail closed: invalid request",
+      "description": "A negative amount can't be read, so nothing moves. Expect 'block' (HTTP 200, never 500).",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"policy\": {\n    \"text\": \"Never pay more than ₹5,000 in a single payment.\\nAsk me before anything above ₹1,000.\\nKeep food under ₹1,500 a day.\\nBlock gambling and crypto.\\nAsk me before paying new merchants.\\nBlock anything on Zomato.\",\n    \"rules\": [\n      {\n        \"id\": \"r1\",\n        \"type\": \"max_per_txn\",\n        \"params\": {\n          \"amount\": 5000\n        },\n        \"action\": \"block\",\n        \"source\": \"Never pay more than ₹5,000 in a single payment.\"\n      },\n      {\n        \"id\": \"r2\",\n        \"type\": \"ask_above\",\n        \"params\": {\n          \"amount\": 1000\n        },\n        \"action\": \"ask\",\n        \"source\": \"Ask me before anything above ₹1,000.\"\n      },\n      {\n        \"id\": \"r3\",\n        \"type\": \"category_daily_cap\",\n        \"params\": {\n          \"category\": \"food\",\n          \"amount\": 1500\n        },\n        \"action\": \"block\",\n        \"source\": \"Keep food under ₹1,500 a day.\"\n      },\n      {\n        \"id\": \"r4\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"gambling\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r5\",\n        \"type\": \"blocked_category\",\n        \"params\": {\n          \"category\": \"crypto\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block gambling and crypto.\"\n      },\n      {\n        \"id\": \"r6\",\n        \"type\": \"new_merchant\",\n        \"params\": {},\n        \"action\": \"ask\",\n        \"source\": \"Ask me before paying new merchants.\"\n      },\n      {\n        \"id\": \"r7\",\n        \"type\": \"blocked_merchant\",\n        \"params\": {\n          \"merchant\": \"Zomato\"\n        },\n        \"action\": \"block\",\n        \"source\": \"Block anything on Zomato.\"\n      }\n    ]\n  },\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo1\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": -5,\n    \"category\": \"food\",\n    \"purpose\": \"Dinner: butter chicken and naan\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -997700,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_nopolicy",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Fail closed: missing policy",
+      "description": "No policy means no permission. Expect 'block'.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"state\": {\n    \"day\": \"\",\n    \"spentToday\": 0,\n    \"spentByCategory\": {},\n    \"knownMerchants\": [\n      \"swiggy@icici\",\n      \"uber@axisbank\"\n    ]\n  },\n  \"request\": {\n    \"id\": \"req_demo1\",\n    \"merchant\": \"Swiggy\",\n    \"vpa\": \"swiggy@icici\",\n    \"amount\": 349,\n    \"category\": \"food\",\n    \"purpose\": \"Dinner: butter chicken and naan\",\n    \"timestamp\": \"2026-10-24T06:30:00.000Z\"\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -997600,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_kp_authorize_bad",
+      "_type": "request",
+      "parentId": "fld_kp_authorize",
+      "modified": 1792839410658,
+      "created": 1792839410658,
+      "url": "{{ _.base_url }}/api/authorize",
+      "name": "Fail closed: malformed JSON body",
+      "description": "Expect 'block', HTTP 200.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{not json"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -997500,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    }
+  ]
+}

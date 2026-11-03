@@ -1,0 +1,20 @@
+# Secrets must never reach an image: Next copies .env into its standalone output.
+**/.env*
+
+.git
+.next
+node_modules
+.firebase
+**/*.log
+*.tsbuildinfo
+*.md
+docs
+insomnia
+scripts
+image.png
+logo.mp4
+logo_img.PNG
+firebase.json
+Dockerfile
+.dockerignore
+.gcloudignore

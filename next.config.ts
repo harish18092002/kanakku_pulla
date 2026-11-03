@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone", // minimal server bundle for the Cloud Run Docker image
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
