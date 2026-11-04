@@ -1,216 +1,146 @@
-"use client";
+import type { Metadata } from "next";
+import { Fraunces, Noto_Serif_Tamil } from "next/font/google";
+import Image from "next/image";
+import Link from "next/link";
+import { Ambient } from "@/components/home/Ambient";
+import { HeroFlow } from "@/components/home/HeroFlow";
+import { Outcomes } from "@/components/home/Outcomes";
+import "@/components/home/home.css";
 
-import { useEffect, useReducer, useRef, useState } from "react";
-import { z } from "zod";
-import { AgentPanel } from "@/components/AgentPanel";
-import { ApiCard } from "@/components/ApiCard";
-import { Feed } from "@/components/Feed";
-import { Header } from "@/components/Header";
-import { RulesPanel } from "@/components/RulesPanel";
-import { Suggestions, type SuggestionData } from "@/components/Suggestions";
-import { Splash } from "@/components/Splash";
-import { initialState, loadSaved, reducer, save, type UiMode } from "@/lib/dashboard";
-import { DEMO_POLICY_TEXT, DEMO_REQUESTS, DEMO_TASK } from "@/lib/demo";
-import { parseRules, scriptedRequests } from "@/lib/fallback";
-import { toPolicy, toRequests } from "@/lib/finish";
-import {
-  PaymentRequestSchema,
-  PolicySchema,
-  SearchInfoSchema,
-  type Mode,
-  type PaymentRequest,
-  type Policy,
-  type SearchInfo,
-  type Store,
-} from "@/lib/types";
+const display = Fraunces({ subsets: ["latin"], variable: "--font-display", style: ["normal", "italic"], axes: ["SOFT", "opsz"] });
+const tamil = Noto_Serif_Tamil({ subsets: ["tamil"], variable: "--font-tamil" });
 
-const MAX_TEXT = 2000;
-const RequestsSchema = z.array(PaymentRequestSchema).min(1).max(12);
+export const metadata: Metadata = {
+  title: "Kanakku Pulla: let AI agents pay, on your rules",
+  description:
+    "Kanakku Pulla sits between any AI agent and the payment gateway. Plain code approves, asks or blocks every payment before money moves.",
+};
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-const asMode = (v: unknown): Mode => (v === "gemini" || v === "claude" ? v : "fallback");
-const asStore = (v: unknown): Store => (v === "firestore" ? "firestore" : "local");
+const MARIGOLD_BTN = "kp-btn bg-marigold text-brand";
+const OUTLINE_BTN = "kp-btn border border-white/40 text-[#ECFDF4] hover:bg-white/10";
+const TAMIL_NAME = "கணக்குப் புள்ள";
 
-// Any failure (network, non-200, bad JSON) returns null and the page switches to its in-browser fallback.
-async function callApi(path: string, body: object, timeoutMs = 20_000): Promise<Record<string, unknown> | null> {
-  try {
-    const res = await fetch(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    if (!res.ok) return null;
-    const json: unknown = await res.json();
-    return json && typeof json === "object" ? (json as Record<string, unknown>) : null;
-  } catch {
-    return null;
-  }
+function Arrow() {
+  return (
+    <svg className="kp-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
 }
 
-export default function Page() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [task, setTask] = useState(DEMO_TASK);
-  const [mode, setMode] = useState<UiMode | null>(null);
-  const [store, setStore] = useState<Store>("local");
-  const [warnings, setWarnings] = useState<string[]>([]);
-  const [compiling, setCompiling] = useState(false);
-  const [busy, setBusy] = useState<"agent" | "demo" | null>(null);
-  const [note, setNote] = useState("");
-  const [live, setLive] = useState(true); // ask the agent to search the web
-  const [suggestions, setSuggestions] = useState<SuggestionData | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-  const stateRef = useRef(state);
-  const runId = useRef(0); // bumping this cancels any in-flight agent/demo loop
-
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      const saved = loadSaved();
-      if (saved) dispatch({ type: "hydrate", state: saved });
-      setHydrated(true);
-    }, 0);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) save(state);
-  }, [hydrated, state]);
-
-  async function compile(raw: string): Promise<Policy> {
-    const text = raw.trim().slice(0, MAX_TEXT);
-    setCompiling(true);
-    const res = await callApi("/api/compile", { text });
-    const parsed = res ? PolicySchema.safeParse(res.policy) : null;
-    let policy: Policy;
-    if (res && parsed?.success) {
-      policy = parsed.data;
-      setMode(asMode(res.mode));
-      setStore(asStore(res.store));
-      setWarnings(Array.isArray(res.warnings) ? res.warnings.filter((w): w is string => typeof w === "string") : []);
-    } else {
-      const local = parseRules(text);
-      policy = toPolicy(local.rules, text);
-      setMode("offline");
-      setStore("local");
-      setWarnings(local.rules.length ? local.warnings : [...local.warnings, "No spending rules were found in that text."]);
-    }
-    dispatch({ type: "policy", policy });
-    setCompiling(false);
-    return policy;
-  }
-
-  async function ensurePolicy(): Promise<Policy> {
-    const { policyText, policy } = stateRef.current;
-    const text = policyText.trim().slice(0, MAX_TEXT);
-    return policy && policy.text === text ? policy : compile(text);
-  }
-
-  async function feedRequests(requests: PaymentRequest[], gapMs: number, id: number, onStep?: (i: number) => void) {
-    for (let i = 0; i < requests.length; i++) {
-      if (i > 0) await sleep(gapMs);
-      if (runId.current !== id) return;
-      onStep?.(i);
-      dispatch({ type: "request", request: requests[i] });
-    }
-  }
-
-  async function runAgent() {
-    const id = ++runId.current;
-    setBusy("agent");
-    setNote("Checking your rules…");
-    await ensurePolicy();
-    if (runId.current !== id) return;
-    setNote(live ? "Searching the web for real options… this can take 10–20 seconds" : "Agent is planning payments…");
-    const res = await callApi("/api/agent", { task, search: live }, live ? 50_000 : 20_000);
-    const parsed = res ? RequestsSchema.safeParse(res.requests) : null;
-    const searched = res ? SearchInfoSchema.nullable().safeParse(res.search ?? null) : null;
-    let requests: PaymentRequest[];
-    let used: UiMode;
-    let search: SearchInfo | null = null;
-    if (res && parsed?.success) {
-      requests = parsed.data;
-      used = asMode(res.mode);
-      search = searched?.success ? searched.data : null;
-      setStore(asStore(res.store));
-    } else {
-      requests = toRequests(scriptedRequests(task)); // server unreachable: built-in samples
-      used = "offline";
-      setStore("local");
-    }
-    setMode(used);
-    if (runId.current !== id) return;
-    setSuggestions({ requests, search, mode: used, asked: live });
-    await feedRequests(requests, 700, id, (i) => setNote(`Agent payment ${i + 1} of ${requests.length}`));
-    if (runId.current === id) {
-      setBusy(null);
-      setNote(`Agent finished: ${requests.length} payments checked`);
-    }
-  }
-
-  async function runDemo() {
-    const id = ++runId.current;
-    setBusy("demo");
-    dispatch({ type: "reset" });
-    setSuggestions(null);
-    setNote("Sample scenario: loading the sample rules…");
-    await compile(DEMO_POLICY_TEXT);
-    if (runId.current !== id) return;
-    const requests = DEMO_REQUESTS.map((draft) => toRequests([draft])[0]);
-    await feedRequests(requests, 1000, id, (i) => setNote(`Sample scenario: payment ${i + 1} of ${requests.length}`));
-    if (runId.current === id) {
-      setBusy(null);
-      setNote("Sample scenario finished. Approve or deny the amber cards.");
-    }
-  }
-
-  function reset() {
-    runId.current++;
-    dispatch({ type: "reset" });
-    setMode(null);
-    setStore("local");
-    setWarnings([]);
-    setCompiling(false);
-    setBusy(null);
-    setNote("");
-    setSuggestions(null);
-    setTask(DEMO_TASK);
-  }
-
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Splash />
-      <Header balance={state.balance} wallet={state.wallet} mode={mode} store={store} />
-      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:grid-cols-3">
-        <RulesPanel
-          text={state.policyText}
-          onText={(text) => dispatch({ type: "text", text })}
-          onCompile={() => void compile(state.policyText)}
-          compiling={compiling}
-          policy={state.policy}
-          warnings={warnings}
-        />
-        <AgentPanel
-          task={task}
-          onTask={setTask}
-          live={live}
-          onLive={setLive}
-          busy={busy}
-          note={note}
-          onRun={() => void runAgent()}
-          onDemo={() => void runDemo()}
-          onReset={reset}
-        >
-          <Suggestions data={suggestions} />
-        </AgentPanel>
-        <Feed items={state.feed} onResolve={(id, approve) => dispatch({ type: "resolve", id, approve })} />
-        <div className="lg:col-span-3">
-          <ApiCard />
+    <div className={`kp-home ${display.variable} ${tamil.variable} flex min-h-screen flex-col overflow-x-clip`}>
+      {/* If scripts never run, skip the draw-in so nothing stays invisible. */}
+      <noscript>
+        <style>{`.kp-draw{stroke-dashoffset:0}.kp-fade{opacity:1}`}</style>
+      </noscript>
+
+      <section className="kp-on-green relative isolate bg-brand text-[#ECFDF4]">
+        <Ambient>
+          <span className="kp-lines" />
+          <span className="kp-blob kp-drift" />
+          <span className="kp-blob kp-blob-b kp-drift" />
+        </Ambient>
+
+        <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between">
+          <Link href="/" aria-label="Kanakku Pulla home" className="flex items-center gap-3 self-start rounded-lg md:self-auto">
+            <Image src="/brand/mark.png" alt="" width={44} height={44} preload className="rounded-[22%] ring-1 ring-white/25" />
+            <div>
+              <p className="text-xl font-semibold leading-tight">Kanakku Pulla</p>
+              <p className="text-xs text-[#B8C4C1]">Your AI agent&apos;s wallet, on your rules</p>
+            </div>
+          </Link>
+          <nav aria-label="Main" className="flex items-center justify-between gap-4 md:justify-end">
+            <a href="#how" className="inline-flex min-h-11 items-center text-sm font-semibold hover:underline">
+              How it works
+            </a>
+            <Link href="/demo" className={MARIGOLD_BTN}>
+              Try the live demo
+              <Arrow />
+            </Link>
+          </nav>
+        </header>
+
+        <div className="mx-auto max-w-7xl px-4 pb-4 pt-8 lg:pt-14">
+          <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+            <div>
+              <p className="kp-rise text-xs font-semibold uppercase tracking-[0.22em] text-marigold">Agentic payments · India</p>
+              <h1 className="kp-display mt-4 text-5xl font-medium leading-[1.02] tracking-tight md:text-7xl">
+                <span className="kp-rise block" style={{ animationDelay: "90ms" }}>
+                  Let AI agents pay.
+                </span>
+                <span className="kp-rise block italic text-marigold" style={{ animationDelay: "180ms" }}>
+                  On your rules.
+                </span>
+              </h1>
+            </div>
+            <div className="kp-rise" style={{ animationDelay: "280ms" }}>
+              <p className="text-base leading-relaxed">
+                Kanakku Pulla sits between any AI agent and the payment gateway. You write rules in plain English; plain code
+                approves, asks or blocks every payment before money moves.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href="/demo" className={MARIGOLD_BTN}>
+                  Run the live demo
+                  <Arrow />
+                </Link>
+                <a href="#how" className={OUTLINE_BTN}>
+                  See how it works
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="kp-rise mt-8 lg:mt-10" style={{ animationDelay: "380ms" }}>
+            <HeroFlow />
+          </div>
         </div>
+      </section>
+
+      <main className="flex-1">
+        <section id="how" className="mx-auto max-w-7xl scroll-mt-6 px-4 pb-16 pt-32 md:pt-44">
+          <div className="kp-reveal mb-8 grid items-end gap-3 md:grid-cols-2 md:gap-12">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand">How it works</p>
+              <h2 className="kp-display mt-3 text-4xl font-medium leading-tight tracking-tight text-brand md:text-5xl">
+                One check. <span className="italic">Three outcomes.</span>
+              </h2>
+            </div>
+            <p className="text-base leading-relaxed">
+              Every payment ends in exactly one lane. Block always beats Ask, and Ask beats Approve. The AI only reads your rules; it
+              never decides a payment.
+            </p>
+          </div>
+          <Outcomes />
+        </section>
+
+        <section className="kp-on-green relative isolate bg-brand">
+          <Ambient>
+            <span lang="ta" className="kp-tamil kp-watermark kp-drift">
+              {TAMIL_NAME}
+            </span>
+          </Ambient>
+          <div className="mx-auto flex max-w-7xl flex-col items-start gap-5 px-4 py-14 md:flex-row md:items-center md:justify-between md:py-20">
+            <h2 className="kp-display kp-reveal text-4xl font-medium leading-tight tracking-tight text-[#ECFDF4] md:text-5xl">
+              See it decide <span className="italic text-marigold">in 30 seconds</span>
+            </h2>
+            <Link href="/demo" className={MARIGOLD_BTN}>
+              Run the live demo
+              <Arrow />
+            </Link>
+          </div>
+        </section>
       </main>
+
+      <footer className="border-t border-black/10 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-5 text-sm">
+          <Image src="/brand/mark.png" alt="Kanakku Pulla logo" width={32} height={32} className="rounded-[22%]" />
+          <span lang="ta" className="kp-tamil font-semibold text-brand">
+            {TAMIL_NAME}
+          </span>
+          <span className="text-[#737373]">Demo wallet · no real money</span>
+        </div>
+      </footer>
     </div>
   );
 }

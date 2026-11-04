@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { inr, type UiMode } from "@/lib/dashboard";
 import { CATEGORIES, type Store, type WalletState } from "@/lib/types";
 
@@ -21,10 +22,14 @@ export function Header({ balance, wallet, mode, store }: Props) {
   return (
     <header className="bg-brand text-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+        <Link
+          href="/"
+          aria-label="Kanakku Pulla home"
+          className="flex items-center gap-3 self-start rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-marigold md:self-auto"
+        >
           <Image
             src="/brand/mark.png"
-            alt="Kanakku Pulla logo"
+            alt=""
             width={44}
             height={44}
             priority
@@ -34,7 +39,7 @@ export function Header({ balance, wallet, mode, store }: Props) {
             <h1 className="text-xl font-semibold leading-tight">Kanakku Pulla</h1>
             <p className="text-xs text-white/70">Your AI agent&apos;s wallet, on your rules</p>
           </div>
-        </div>
+        </Link>
 
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
           <div>

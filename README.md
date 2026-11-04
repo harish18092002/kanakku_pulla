@@ -74,7 +74,7 @@ The project needs billing enabled (Blaze plan). The project id comes from `GCP_P
 ## Project layout
 
 ```
-app/            dashboard (page.tsx) and the three API routes
+app/            homepage (page.tsx), dashboard (demo/page.tsx) and the three API routes
 components/     header, rules panel, agent panel, live feed, intro splash
 lib/engine.ts   the rules engine: the only place money decisions are made
 lib/ai.ts       Gemini (REST) then Claude (SDK), with timeouts and validation

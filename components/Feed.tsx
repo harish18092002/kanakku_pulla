@@ -19,7 +19,7 @@ export function Feed({ items, onResolve }: Props) {
           No payments yet. Run the agent or the sample scenario.
         </p>
       ) : (
-        <ul className="mt-3 space-y-3 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto lg:pr-1">
+        <ul className="mt-3 space-y-3">
           {items.map(({ request, status, reasons }) => {
             const tone = TONE[status];
             return (

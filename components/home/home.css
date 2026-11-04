@@ -1,0 +1,336 @@
+/* Homepage only. Everything is scoped to .kp-home or kp- classes; motion uses transform, opacity and stroke-dashoffset. */
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.kp-home) {
+    scroll-behavior: smooth;
+  }
+}
+
+.kp-home {
+  --kp-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.kp-home a:focus-visible,
+.kp-home button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.kp-home .kp-on-green a:focus-visible {
+  outline-color: var(--marigold);
+}
+
+.kp-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Draw-in: strokes first (700ms), then nodes with a 60ms stagger. */
+.kp-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 700ms var(--kp-ease);
+}
+
+[data-seen="true"] .kp-draw {
+  stroke-dashoffset: 0;
+}
+
+.kp-fade {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  transition-delay: calc(700ms + var(--i, 0) * 60ms);
+}
+
+[data-seen="true"] .kp-fade {
+  opacity: 1;
+}
+
+/* Edges: dashed and marching while active; the solid stroke follows the token. */
+.kp-solid {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--kp-hop, 900ms) var(--kp-ease);
+}
+
+.kp-edge[data-state="active"] .kp-solid,
+.kp-edge[data-state="done"] .kp-solid {
+  stroke-dashoffset: 0;
+}
+
+.kp-edge[data-state="active"] .kp-dash {
+  animation: kp-march 600ms linear infinite;
+}
+
+/* Back to idle is an instant reset, never a reverse animation. */
+.kp-edge[data-state="idle"] .kp-solid,
+.kp-edge[data-state="idle"] .kp-token {
+  transition: none;
+}
+
+[data-paused="true"] .kp-dash {
+  animation-play-state: paused;
+}
+
+@keyframes kp-march {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.kp-token {
+  transition:
+    transform var(--kp-hop, 900ms) var(--kp-ease),
+    opacity 150ms linear;
+}
+
+.kp-tint,
+.kp-show {
+  transition: opacity 240ms ease-out;
+}
+
+.kp-show[data-on="false"] {
+  opacity: 0;
+}
+
+.kp-pop {
+  opacity: 0;
+  transform: scale(0.6);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 160ms ease-out,
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.kp-pop[data-on="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+.kp-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kp-ring 300ms ease-out forwards;
+}
+
+@keyframes kp-ring {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+}
+
+.kp-word {
+  opacity: 0;
+  transition: opacity 180ms linear;
+}
+
+[data-on="true"] > .kp-word {
+  opacity: 1;
+}
+
+/* Final states, instantly. Toggles and Replay still change what is shown. */
+@media (prefers-reduced-motion: reduce) {
+  .kp-home *,
+  .kp-home *::before,
+  .kp-home *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .kp-draw {
+    stroke-dashoffset: 0;
+  }
+
+  .kp-fade {
+    opacity: 1;
+  }
+
+  .kp-ring {
+    opacity: 0;
+  }
+}
+
+/* ---------- Premium layer: type, paper, ambient motion, stamp ---------- */
+.kp-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-variation-settings: "SOFT" 60;
+}
+
+.kp-tamil {
+  font-family: var(--font-tamil), serif;
+}
+
+.kp-btn {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 180ms ease-out, background-color 180ms ease-out;
+}
+
+.kp-btn:hover {
+  transform: translateY(-2px);
+}
+
+.kp-btn:active {
+  transform: translateY(0);
+}
+
+/* The sheen sweeps across on hover. */
+.kp-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 600ms var(--kp-ease);
+}
+
+.kp-btn:hover::after {
+  transform: translateX(110%);
+}
+
+.kp-arrow {
+  transition: transform 180ms ease-out;
+}
+
+.kp-btn:hover .kp-arrow {
+  transform: translateX(3px);
+}
+
+.kp-rise {
+  animation: kp-rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes kp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Scroll-linked where supported; otherwise simply visible. */
+@supports (animation-timeline: view()) {
+  .kp-reveal {
+    animation: kp-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+
+.kp-lines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(to bottom, rgba(236, 253, 244, 0.055) 0 1px, transparent 1px 40px);
+  mask-image: linear-gradient(to bottom, #000, transparent 75%);
+}
+
+.kp-blob {
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: min(60vw, 720px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 179, 61, 0.2), transparent 65%);
+}
+
+.kp-blob-b {
+  top: 35%;
+  right: auto;
+  left: -15%;
+  background: radial-gradient(circle, rgba(62, 170, 130, 0.22), transparent 65%);
+  animation-delay: -9s;
+}
+
+.kp-drift {
+  animation: kp-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes kp-drift {
+  to {
+    transform: translate3d(-6%, 5%, 0) scale(1.06);
+  }
+}
+
+.kp-watermark {
+  position: absolute;
+  top: 50%;
+  right: -2%;
+  margin-top: -0.65em;
+  font-size: clamp(5rem, 18vw, 15rem);
+  line-height: 1.3;
+  white-space: nowrap;
+  color: #ecfdf4;
+  opacity: 0.07;
+}
+
+.kp-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kp-spin 14s linear infinite;
+}
+
+@keyframes kp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[data-paused="true"] .kp-drift,
+[data-paused="true"] .kp-spin {
+  animation-play-state: paused;
+}
+
+.kp-paper {
+  background-color: #fff;
+  background-image: repeating-linear-gradient(to bottom, transparent 0 31px, rgba(14, 59, 46, 0.045) 31px 32px);
+  box-shadow: 0 30px 70px -30px rgba(4, 24, 18, 0.55);
+}
+
+.kp-lift {
+  box-shadow: 0 30px 70px -45px rgba(14, 59, 46, 0.5);
+}
+
+/* The accountant's rubber stamp. */
+.kp-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 3px double;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.2rem 0.7rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transform: rotate(-7deg) scale(1.9);
+  transition:
+    opacity 120ms linear,
+    transform 240ms cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.kp-stamp[data-on="true"] {
+  opacity: 1;
+  transform: rotate(-7deg);
+}
